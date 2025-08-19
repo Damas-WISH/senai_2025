@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Tarefa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Tarefa</h1>
+        <form method="post" action="{{ url_for('editar', id=id) }}">
+            <label for="tarefa">Tarefa:</label>
+            <input type="text" id="tarefa" name="tarefa" value="{{ tarefa.tarefa }}" required>
+
+            <label for="data_limite">Data limite:</label>
+            <input type="date" id="data_limite" name="data_limite" value="{{ tarefa.data_limite }}" required>
+
+            <button type="submit">Salvar Alterações</button>
+        </form>
+
+        <a href="/">Voltar</a>
+    </div>
+</body>
+</html>

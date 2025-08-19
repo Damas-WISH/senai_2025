@@ -1,25 +1,34 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-# Lista para armazenar as tarefas em memória
 tarefas = []
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    # Página inicial: só mostra o formulário e a lista
     return render_template("index.html", tarefas=tarefas)
 
 @app.route("/adicionar", methods=["POST"])
 def adicionar():
     tarefa = request.form.get("tarefa")
     data_limite = request.form.get("data_limite")
-
-    # Adiciona na lista antes de ir para a página de sucesso
     tarefas.append({"tarefa": tarefa, "data_limite": data_limite})
-
-    # Vai para a página de sucesso
     return render_template("sucesso.html", tarefa=tarefa, data_limite=data_limite)
+
+@app.route("/editar/<int:id>", methods=["GET", "POST"])
+def editar(id):
+    if request.method == "POST":
+        tarefas[id]["tarefa"] = request.form["tarefa"]
+        tarefas[id]["data_limite"] = request.form["data_limite"]
+        return redirect(url_for("index"))
+
+    return render_template("editar.html", tarefa=tarefas[id], id=id)
+
+@app.route("/excluir/<int:id>", methods=["POST"])
+def excluir(id):
+    # Remove a tarefa da lista
+    del tarefas[id]
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     app.run(debug=True)

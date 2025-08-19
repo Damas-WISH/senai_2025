@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Lista de Tarefas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
 </head>
 <body>
     <div class="container">
@@ -16,7 +17,12 @@
             <input type="date" id="data_limite" name="data_limite" required>
 
             <button type="submit">Adicionar</button>
+
+            <a href="{{ url_for('editar', id=i) }}">Editar</a>
+
+            
         </form>
+
 
         <h2>Lista de Tarefas</h2>
         {% if tarefas %}
