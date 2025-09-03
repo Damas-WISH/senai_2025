@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Cadastro de Livros</h1>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.titulo.label }} {{ form.titulo(size=30) }}</p>
+    <p>{{ form.ano_publicacao.label }} {{ form.ano_publicacao(size=10) }}</p>
+    <p>{{ form.autor.label }} {{ form.autor() }}</p>
+    <p>{{ form.submit() }}</p>
+</form>
+
+<h2>Livros Cadastrados</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Ano</th>
+        <th>Autor</th>
+    </tr>
+    {% for livro in livros %}
+    <tr>
+        <td>{{ livro.id }}</td>
+        <td>{{ livro.titulo }}</td>
+        <td>{{ livro.ano_publicacao }}</td>
+        <td>{{ livro.autor.nome }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

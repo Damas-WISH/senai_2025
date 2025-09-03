@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Cadastro de Autores</h1>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.nome.label }} {{ form.nome(size=30) }}</p>
+    <p>{{ form.submit() }}</p>
+</form>
+
+<h2>Autores Cadastrados</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Qtd. Livros</th>
+    </tr>
+    {% for autor in autores %}
+    <tr>
+        <td>{{ autor.id }}</td>
+        <td>{{ autor.nome }}</td>
+        <td>{{ autor.livros|length }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
