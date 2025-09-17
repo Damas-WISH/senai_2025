@@ -1,7 +1,7 @@
 from app import db
 
 # 1. O "Association Object" para a relação M:M
-class ReceitaIngrediente(db.Model):
+class ReceitaIngrediente(db.Model):  # <-- singular
     __tablename__ = 'receita_ingredientes'
     receita_id = db.Column(db.Integer, db.ForeignKey('receita.id'),
                            primary_key=True)
@@ -20,14 +20,11 @@ class Chef(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     
-    # Relação 1:1 com PerfilChef
     perfil = db.relationship('PerfilChef', back_populates='chef',
                              uselist=False, cascade="all, delete-orphan")
-    
-    # Relação 1:M com Receita
     receitas = db.relationship('Receita', back_populates='chef')
 
-# 3. Modelo PerfilChef (O outro "Um" de One-to-One)
+# 3. Modelo PerfilChef
 class PerfilChef(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     especialidade = db.Column(db.String(100))
@@ -37,7 +34,7 @@ class PerfilChef(db.Model):
     
     chef = db.relationship('Chef', back_populates='perfil')
 
-# 4. Modelo Receita (O "Muitos" de One-to-Many e parte do M:M)
+# 4. Modelo Receita
 class Receita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
@@ -46,16 +43,19 @@ class Receita(db.Model):
 
     chef = db.relationship('Chef', back_populates='receitas')
 
-    # Relação com o "Association Object"
-    ingredientes_associados = \
-        db.relationship('ReceitaIngrediente', 
-                        back_populates='receita', cascade="all, delete-orphan")
+    ingredientes_associados = db.relationship(
+        'ReceitaIngrediente',  # <-- singular
+        back_populates='receita',
+        cascade="all, delete-orphan"
+    )
 
-# 5. Modelo Ingrediente (A outra parte do M:M)
+# 5. Modelo Ingrediente
 class Ingrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
 
-    receitas_associadas = \
-        db.relationship('ReceitaIngrediente',
-                        back_populates='ingrediente', cascade="all, delete-orphan")
+    receitas_associadas = db.relationship(
+        'ReceitaIngrediente',  # <-- singular
+        back_populates='ingrediente',
+        cascade="all, delete-orphan"
+    )
