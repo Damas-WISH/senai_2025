@@ -57,93 +57,85 @@ def cadastro():
     return render_template('cadastro.html', title='Cadastro', form=form)
 @app.route("/login", methods=['GET', 'POST'])
 def login():
-if current_user.is_authenticated:
-return redirect(url_for('index'))
-form = LoginForm()
-if form.validate_on_submit():
-user = Usuario.query.filter_by(email=form.email.data).first()
-if user and bcrypt.check_password_hash(user.password_hash,
-form.password.data):
-login_user(user)
-return redirect(url_for('index'))
-return render_template('login.html', title='Login', form=form)
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Usuario.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
+            login_user(user)
+            return redirect(url_for('index'))
+    return render_template('login.html', title='Login', form=form)
 @app.route("/logout")
 def logout():
-logout_user()
-return redirect(url_for('index'))
+    logout_user()
+    return redirect(url_for('index'))
 @app.route('/receita/nova', methods=['GET', 'POST'])
 @login_required # Protege a rota!
 def criar_receita():
-if not current_user.chef:
-return "Apenas usuários com perfil de chef podem criar receitas.", 403
-if request.method == 'POST':
-titulo = request.form['titulo']
-instrucoes = request.form['instrucoes']
+    if not current_user.chef:
+        return "Apenas usuários com perfil de chef podem criar receitas.", 403
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        instrucoes = request.form['instrucoes']
 
-Prof. Alexandre Bendlin Pág. 5
-
-Desenvolvimento de Sistemas Web
-# O autor da receita é o chef associado ao usuário logado
-nova_receita = Receita(titulo=titulo, instrucoes=instrucoes,
-chef_id=current_user.chef.id)
-db.session.add(nova_receita)
-ingredientes_str = request.form['ingredientes']
-pares_ingredientes = [par.strip() for par in ingredientes_str.split(',') if
-par.strip()]
-for par in pares_ingredientes:
-if ':' in par:
-nome, qtd = par.split(':', 1)
-nome_ingrediente = nome.strip().lower()
-quantidade = qtd.strip()
-ingrediente =
-Ingrediente.query.filter_by(nome=nome_ingrediente).first()
-if not ingrediente:
-ingrediente = Ingrediente(nome=nome_ingrediente)
-db.session.add(ingrediente)
-associacao = ReceitaIngrediente(receita=nova_receita,
-ingrediente=ingrediente, quantidade=quantidade)
-db.session.add(associacao)
-db.session.commit()
-return redirect(url_for('index'))
-return render_template('criar_receita.html')
+        # O autor da receita é o chef associado ao usuário logado
+        nova_receita = Receita(titulo=titulo, instrucoes=instrucoes,
+                               chef_id=current_user.chef.id)
+        db.session.add(nova_receita)
+        ingredientes_str = request.form['ingredientes']
+        pares_ingredientes = [par.strip() for par in ingredientes_str.split(',') if par.strip()]
+        for par in pares_ingredientes:
+            if ':' in par:
+                nome, qtd = par.split(':', 1)
+                nome_ingrediente = nome.strip().lower()
+                quantidade = qtd.strip()
+                ingrediente = Ingrediente.query.filter_by(nome=nome_ingrediente).first()
+                if not ingrediente:
+                    ingrediente = Ingrediente(nome=nome_ingrediente)
+                    db.session.add(ingrediente)
+                associacao = ReceitaIngrediente(receita=nova_receita,
+                                                ingrediente=ingrediente, quantidade=quantidade)
+                db.session.add(associacao)
+        db.session.commit()
+        return redirect(url_for('index'))
+    return render_template('criar_receita.html')
 @app.route('/chef/<int:chef_id>')
 def detalhes_chef(chef_id):
-chef = Chef.query.get_or_404(chef_id)
-return render_template('detalhes_chef.html', chef=chef)
+    chef = Chef.query.get_or_404(chef_id)
+    return render_template('detalhes_chef.html', chef=chef)
 # --- Comandos CLI ---
 @app.cli.command('init-db')
 def init_db_command():
-with app.app_context():
-db.drop_all()
-db.create_all()
-# Criar Usuário 1
-hashed_pass1 = bcrypt.generate_password_hash('senha123').decode('utf-8')
-user1 = Usuario(email='ana@example.com', password_hash=hashed_pass1)
-# Criar Chef 1 e associar ao Usuário 1
-chef1 = Chef(nome='Ana Maria', especialidade='Culinária Brasileira',
-usuario=user1)
-db.session.add(user1)
-db.session.add(chef1)
-db.session.commit() # Commit para garantir que o chef1 tenha um ID
-# Criar Ingredientes
-ingredientes = {
-'tomate': Ingrediente(nome='tomate'), 'cebola':
-Ingrediente(nome='cebola')
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        # Criar Usuário 1
+        hashed_pass1 = bcrypt.generate_password_hash('senha123').decode('utf-8')
+        user1 = Usuario(email='ana@example.com', password_hash=hashed_pass1)
+        # Criar Chef 1 e associar ao Usuário 1
+        chef1 = Chef(nome='Ana Maria', especialidade='Culinária Brasileira',
+                     usuario=user1)
+        db.session.add(user1)
+        db.session.add(chef1)
+        db.session.commit() # Commit para garantir que o chef1 tenha um ID
+        # Criar Ingredientes
+        ingredientes = {
+            'tomate': Ingrediente(nome='tomate'),
+            'cebola': Ingrediente(nome='cebola')
+        }
+        db.session.add_all(list(ingredientes.values()))
+        db.session.commit()
+        # Criar Receita
+        receita1 = Receita(titulo='Molho de Tomate Clássico', instrucoes='Refogue tudo.', chef_id=chef1.id)
+        db.session.add(receita1)
+        db.session.commit()
+        # Criar Associações
+        assoc1 = ReceitaIngrediente(receita_id=receita1.id,
+                                    ingrediente_id=ingredientes['tomate'].id, quantidade='5 unidades')
+        db.session.add(assoc1)
+        db.session.commit()
+        print('Banco de dados com sistema de usuários inicializado!')
 
-
-}
-db.session.add_all(list(ingredientes.values()))
-db.session.commit()
-# Criar Receita
-receita1 = Receita(titulo='Molho de Tomate Clássico', instrucoes='Refogue
-tudo.', chef_id=chef1.id)
-db.session.add(receita1)
-db.session.commit()
-# Criar Associações
-assoc1 = ReceitaIngrediente(receita_id=receita1.id,
-ingrediente_id=ingredientes['tomate'].id, quantidade='5 unidades')
-db.session.add(assoc1)
-db.session.commit()
-print('Banco de dados com sistema de usuários inicializado!')
 if __name__ == '__main__':
-app.run(debug=True)
+    app.run(debug=True)

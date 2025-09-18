@@ -1,61 +1,42 @@
-from app import db
-
-# 1. O "Association Object" para a relação M:M
-class ReceitaIngrediente(db.Model):  # <-- singular
+class ReceitaIngrediente(db.Model):
     __tablename__ = 'receita_ingredientes'
-    receita_id = db.Column(db.Integer, db.ForeignKey('receita.id'),
-                           primary_key=True)
-    ingrediente_id = db.Column(db.Integer, db.ForeignKey('ingrediente.id'),
-                               primary_key=True)
+    receita_id = db.Column(db.Integer, db.ForeignKey('receita.id'), primary_key=True)
+    ingrediente_id = db.Column(db.Integer, db.ForeignKey('ingrediente.id'), primary_key=True)
     quantidade = db.Column(db.String(50), nullable=False)
+    ingrediente = db.relationship("Ingrediente", back_populates="receitas_associadas")
+    receita = db.relationship("Receita", back_populates="ingredientes_associados")
 
-    # Relações de volta para Receita e Ingrediente
-    ingrediente = db.relationship("Ingrediente",
-                                  back_populates="receitas_associadas")
-    receita = db.relationship("Receita",
-                              back_populates="ingredientes_associados")
+# NOVO MODELO: Usuario (para autenticação)
+class Usuario(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    # Relação 1:1 com Chef -> Um usuário pode ter um perfil de chef
+    chef = db.relationship('Chef', back_populates='usuario', uselist=False, cascade="all, delete-orphan")
 
-# 2. Modelo Chef (O "Um" de One-to-One e One-to-Many)
+# MODELO AJUSTADO: Chef (agora é um perfil)
 class Chef(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    
-    perfil = db.relationship('PerfilChef', back_populates='chef',
-                             uselist=False, cascade="all, delete-orphan")
+    especialidade = db.Column(db.String(100))
+    # Chave estrangeira para conectar ao usuário
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False, unique=True)
+    # Relação de volta para Usuario
+    usuario = db.relationship('Usuario', back_populates='chef')
+    # Relação 1:M com Receita (não muda)
     receitas = db.relationship('Receita', back_populates='chef')
 
-# 3. Modelo PerfilChef
-class PerfilChef(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    especialidade = db.Column(db.String(100))
-    anos_experiencia = db.Column(db.Integer)
-    chef_id = db.Column(db.Integer, db.ForeignKey('chef.id'), 
-                        nullable=False, unique=True)
-    
-    chef = db.relationship('Chef', back_populates='perfil')
-
-# 4. Modelo Receita
+# MODELO AJUSTADO: Receita
 class Receita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
     instrucoes = db.Column(db.Text, nullable=False)
-    chef_id = db.Column(db.Integer, db.ForeignKey('chef.id'), nullable=False)
-
+    chef_id = db.Column(db.Integer, db.ForeignKey('chef.id'), nullable=False) # Continua apontando para Chef
     chef = db.relationship('Chef', back_populates='receitas')
+    ingredientes_associados = db.relationship('ReceitaIngrediente', back_populates='receita', cascade="all, delete-orphan")
 
-    ingredientes_associados = db.relationship(
-        'ReceitaIngrediente',  # <-- singular
-        back_populates='receita',
-        cascade="all, delete-orphan"
-    )
-
-# 5. Modelo Ingrediente
+# Modelo Ingrediente (não muda)
 class Ingrediente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False, unique=True)
-
-    receitas_associadas = db.relationship(
-        'ReceitaIngrediente',  # <-- singular
-        back_populates='ingrediente',
-        cascade="all, delete-orphan"
-    )
+    receitas_associadas = db.relationship('ReceitaIngrediente', back_populates='ingrediente', cascade="all, delete-orphan")
