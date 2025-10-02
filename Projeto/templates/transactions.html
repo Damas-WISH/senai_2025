@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Suas Transações</h2>
+<ul>
+    {% for t in transacoes %}
+        <li>{{ t.type }} - {{ t.category }}: R$ {{ t.amount }}</li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('finance.add_transaction') }}">Nova Transação</a>
+{% endblock %}
